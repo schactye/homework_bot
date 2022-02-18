@@ -44,7 +44,8 @@ def get_api_answer(current_timestamp):
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     try:
-        response = request.Request.get(ENDPOINT, headers=HEADERS, params=params)
+        response = request.Request.get(
+            ENDPOINT, headers=HEADERS, params=params)
         if response.status_code != 200:
             logger.error('No server response')
             raise
