@@ -1,9 +1,10 @@
-from asyncio.log import logger
 import logging
 import os
-import time
-from urllib import request
 from urllib.error import URLError
+import requests
+import time
+
+
 from dotenv import load_dotenv
 import telegram
 
@@ -42,12 +43,12 @@ def get_api_answer(current_timestamp):
     """Берем информацию от сервера."""
     headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
     payload = {'from_date': current_timestamp}
-    homework_statuses = request.Request.get(
-        URLError, headers=headers, params=payload)
+    homework_statuses = requests.get(URLError, headers=headers, params=payload)
     if homework_statuses.status_code != 200:
         raise Exception("invalid response")
     logging.info('server respond')
     return homework_statuses.json()
+
 
 
 def check_response(response):
@@ -58,7 +59,7 @@ def check_response(response):
         raise Exception('Ошибка в данных, пустой словарь')
     if 'homeworks' not in response.keys():
         message = 'Отсутствие ключа \'homeworks\' в словаре '
-        logger.error(message)
+        logging.Logger.error(message)
         raise Exception(message)
     homeworks = response.get('homeworks')
     if not isinstance(homeworks, list):
@@ -80,13 +81,7 @@ def parse_status(homework):
 
 def check_tokens():
     """Проверка полученной информации."""
-    env = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
-    for var in env:
-        if var is None:
-            logger.critical(
-                f'Отсутствует обязательная переменная окружения: {var}')
-            return False
-    return True
+    return PRACTICUM_TOKEN and TELEGRAM_TOKEN and TELEGRAM_CHAT_ID
 
 
 def main():
@@ -105,13 +100,13 @@ def main():
                 message = parse_status(homework)
                 send_message(bot, message)
                 tmp_status = homework['status']
-            logger.info(
+            logging.Logger.info(
                 f'Изменений нет, {RETRY_TIME} секунд и проверяем API')
             current_timestamp = response.get('current_date', current_timestamp)
 
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
-            logger.error(message)
+            logging.Logger.error(message)
             if error_message != message:
                 error_message = message
                 send_message(bot, error_message)
