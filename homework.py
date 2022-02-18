@@ -1,13 +1,11 @@
-
 from asyncio.log import logger
 from http import HTTPStatus
-from http.client import REQUEST_ENTITY_TOO_LARGE, REQUEST_TIMEOUT
 import logging
 import os
 import time
 from urllib import request
-from telegram import Bot
 from dotenv import load_dotenv
+import telegram
 
 logging.basicConfig(
     level=logging.INFO,
@@ -35,10 +33,10 @@ HOMEWORK_STATUSES = {
 
 
 def send_message(bot, message):
-   try:
+    try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logger.info('Сообщение отправлено')
-   except telegram.error.TelegramError:
+    except telegram.error.TelegramError:
         logger.error('Сбой при отправке сообщения')
 
 
@@ -46,9 +44,11 @@ def get_api_answer(current_timestamp):
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     try:
-        response = request.Request.get(ENDPOINT, headers=HEADERS, params=params)
+        response = request.Request.get(ENDPOINT, 
+        headers=HEADERS, params=params)
     except request.Request.exceptions.ConnectTimeout as error:
-        logger.error(f'Превышено время ожидания ответа сервера {error}')
+        logger.error(
+            f'Превышено время ожидания ответа сервера {error}')
         raise error
     except request.Request.exceptions.RequestException as error:
         logger.error(f'Произошла ошибка соединения {error}')
@@ -57,7 +57,7 @@ def get_api_answer(current_timestamp):
         logger.error(f'Сбой в работе программы: Эндпоинт {ENDPOINT} '
                      f'недоступен. Код ответа API: {response.status_code}')
         raise request.Request.HTTPError('Неверный код ответа сервера.'
-                                 f'{response.status_code}')
+              f'{response.status_code}')
     try:
         return response.json()
     except ValueError as error:
