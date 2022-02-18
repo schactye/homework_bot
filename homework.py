@@ -1,10 +1,8 @@
+from http import HTTPStatus
 import logging
 import os
-from urllib.error import URLError
 import requests
 import time
-
-
 from dotenv import load_dotenv
 import telegram
 
@@ -41,13 +39,25 @@ def send_message(bot, message):
 
 def get_api_answer(current_timestamp):
     """Берем информацию от сервера."""
-    headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
-    payload = {'from_date': current_timestamp}
-    homework_statuses = requests.get(URLError, headers=headers, params=payload)
-    if homework_statuses.status_code != 200:
-        raise Exception("invalid response")
-    logging.info('server respond')
-    return homework_statuses.json()
+    timestamp = current_timestamp or int(time.time())
+    params = {'from_date': timestamp}
+    try:
+        homework_statuses = requests.get(ENDPOINT,
+                                         headers=HEADERS,
+                                         params=params
+                                         )
+    except Exception as error:
+        logging.error(f'Ошибка при запросе к основному API: {error}')
+        raise Exception(f'Ошибка при запросе к основному API: {error}')
+    if homework_statuses.status_code != HTTPStatus.OK:
+        status_code = homework_statuses.status_code
+        logging.error(f'Ошибка {status_code}')
+        raise Exception(f'Ошибка {status_code}')
+    try:
+        return homework_statuses.json()
+    except ValueError:
+        logging.Logger.error('Ошибка парсинга ответа из формата json')
+        raise ValueError('Ошибка парсинга ответа из формата json')
 
 
 def check_response(response):
