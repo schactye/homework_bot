@@ -3,6 +3,7 @@ import logging
 import os
 import time
 from urllib import request
+from urllib.error import URLError
 from dotenv import load_dotenv
 import telegram
 
@@ -39,21 +40,14 @@ def send_message(bot, message):
 
 def get_api_answer(current_timestamp):
     """Берем информацию от сервера."""
-    logger = logging.getLogger('get_api_answer')
-    logger.info('get_api_answer')
-    timestamp = current_timestamp or int(time.time())
-    params = {'from_date': timestamp}
-    try:
-        response = request.Request.get(
-            ENDPOINT, headers=HEADERS, params=params)
-        if response.status_code != 200:
-            logger.error('No server response')
-            raise
-        logger.info('Successfully connected to the server')
-    except request.Request.exceptions.RequestException as e:
-        logger.exception(e)
-        raise
-    return response.json()
+    headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
+    payload = {'from_date': current_timestamp}
+    homework_statuses = request.Request.get(
+        URLError, headers=headers, params=payload)
+    if homework_statuses.status_code != 200:
+        raise Exception("invalid response")
+    logging.info('server respond')
+    return homework_statuses.json()
 
 
 def check_response(response):
