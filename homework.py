@@ -32,9 +32,9 @@ HOMEWORK_STATUSES = {
 
 
 def send_message(bot, message):
-     """Отсылаем сообщение."""
-     logging.info(f'message send {message}')
-     return bot.send_message(chat_id=CHAT_ID, text=message)
+    """Отсылаем сообщение."""
+    logging.info(f'message send {message}')
+    return bot.send_message(chat_id=CHAT_ID, text=message)
 
 
 def get_api_answer(current_timestamp):
@@ -85,14 +85,14 @@ def parse_status(homework):
 
 
 def check_tokens():
-     """Проверка полученной информации."""
-     env = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
-     for var in env:
+    """Проверка полученной информации."""
+    env = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
+    for var in env:
         if var is None:
             logger.critical(
                 f'Отсутствует обязательная переменная окружения: {var}')
             return False
-     return True
+    return True
 
 
 def main():
