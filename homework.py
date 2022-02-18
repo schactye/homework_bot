@@ -32,21 +32,20 @@ HOMEWORK_STATUSES = {
 
 
 def send_message(bot, message):
-    try:
-        bot.send_message(TELEGRAM_CHAT_ID, message)
-        logger.info('Сообщение отправлено')
-    except telegram.error.TelegramError:
-        logger.error('Сбой при отправке сообщения')
+     """Отсылаем сообщение."""
+     logging.info(f'message send {message}')
+     return bot.send_message(chat_id=CHAT_ID, text=message)
 
 
 def get_api_answer(current_timestamp):
+    """Берем информацию от сервера."""
     logger = logging.getLogger('get_api_answer')
     logger.info('get_api_answer')
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     try:
         response = request.Request.get(ENDPOINT, headers=HEADERS,
-        params=params)
+                        params=params)
         if response.status_code != 200:
             logger.error('No server response')
             raise
@@ -58,6 +57,7 @@ def get_api_answer(current_timestamp):
 
 
 def check_response(response):
+    """Проверка полученной информации."""
     if not isinstance(response, dict):
         raise TypeError('Ожидался словарь')
     if len(response) == 0:
@@ -73,6 +73,7 @@ def check_response(response):
 
 
 def parse_status(homework):
+    """Достаем статус работы."""
     verdict = HOMEWORK_STATUSES[homework.get('status')]
     homework_name = homework.get('homework_name')
     if homework_name is None:
@@ -84,16 +85,18 @@ def parse_status(homework):
 
 
 def check_tokens():
-    env = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
-    for var in env:
+     """Проверка полученной информации."""
+     env = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
+     for var in env:
         if var is None:
             logger.critical(
                 f'Отсутствует обязательная переменная окружения: {var}')
             return False
-    return True
+     return True
 
 
 def main():
+    """Главный цикл работы."""
     if not check_tokens():
         exit()
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
