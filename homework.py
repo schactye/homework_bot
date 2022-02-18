@@ -50,7 +50,6 @@ def get_api_answer(current_timestamp):
     return homework_statuses.json()
 
 
-
 def check_response(response):
     """Проверка полученной информации."""
     if not isinstance(response, dict):
