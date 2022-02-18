@@ -41,29 +41,20 @@ def send_message(bot, message):
 
 
 def get_api_answer(current_timestamp):
+    logger = logging.getLogger('get_api_answer')
+    logger.info('get_api_answer')
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     try:
-        response = request.Request.get(ENDPOINT, 
-        headers=HEADERS, params=params)
-    except request.Request.exceptions.ConnectTimeout as error:
-        logger.error(
-            f'Превышено время ожидания ответа сервера {error}')
-        raise error
-    except request.Request.exceptions.RequestException as error:
-        logger.error(f'Произошла ошибка соединения {error}')
-        raise error
-    if response.status_code != HTTPStatus.OK:
-        logger.error(f'Сбой в работе программы: Эндпоинт {ENDPOINT} '
-                     f'недоступен. Код ответа API: {response.status_code}')
-        raise request.Request.HTTPError('Неверный код ответа сервера.'
-              f'{response.status_code}')
-    try:
-        return response.json()
-    except ValueError as error:
-        logger.error(error)
-        raise ValueError('Ответ не содержит валидный JSON')
-
+        response = request.Request.get(ENDPOINT, headers=HEADERS, params=params)
+        if response.status_code != 200:
+            logger.error('No server response')
+            raise
+        logger.info('Successfully connected to the server')
+    except request.Request.exceptions.RequestException as e:
+        logger.exception(e)
+        raise
+    return response.json()
 
 def check_response(response):
     if not isinstance(response, dict):
