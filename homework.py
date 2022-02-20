@@ -92,11 +92,12 @@ def parse_status(homework):
     if homework['status'] not in HOMEWORK_STATUSES:
         message = "Неожиданный статус."
         logger.error(message)
-        raise NoDocumentedStatusError(message)
+        raise os.error(message)
     homework_name = homework['homework_name']
     homework_status = homework['status']
     verdict = HOMEWORK_STATUSES[homework_status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
+
 
 def check_tokens():
     """Проверка полученной информации."""
@@ -124,6 +125,7 @@ def main():
             )
             time.sleep(RETRY_TIME)
             continue
+
 
 if __name__ == '__main__':
     main()
