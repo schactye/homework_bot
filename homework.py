@@ -1,3 +1,4 @@
+from asyncio.log import logger
 from http import HTTPStatus
 import logging
 import os
@@ -78,15 +79,24 @@ def check_response(response):
 
 def parse_status(homework):
     """Достаем статус работы."""
-    verdict = HOMEWORK_STATUSES[homework.get('status')]
-    homework_name = homework.get('homework_name')
-    if homework_name is None:
-        raise Exception("No homework name")
-    if verdict is None:
-        raise Exception("No verdict")
-    logging.info(f'got verdict {verdict}')
+    if not isinstance(homework, dict):
+        message = 'Некорректный тип данных.'
+        logger.error(message)
+        raise TypeError(message)
+    if 'homework_name' not in homework:
+        parse_message = 'Нет ключа "homework_name".'
+        raise KeyError(parse_message)
+    if 'status' not in homework:
+        parse_message = 'Нет ключа "status".'
+        raise KeyError(parse_message)
+    if homework['status'] not in HOMEWORK_STATUSES:
+        message = "Неожиданный статус."
+        logger.error(message)
+        raise NoDocumentedStatusError(message)
+    homework_name = homework['homework_name']
+    homework_status = homework['status']
+    verdict = HOMEWORK_STATUSES[homework_status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
-
 
 def check_tokens():
     """Проверка полученной информации."""
@@ -95,32 +105,25 @@ def check_tokens():
 
 def main():
     """Главный цикл работы."""
-    if not check_tokens():
-        exit()
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     current_timestamp = int(time.time())
-    tmp_status = 'reviewing'
-    error_message = None
+    url = ENDPOINT
     while True:
         try:
-            response = get_api_answer(current_timestamp)
-            homework = check_response(response)
-            if homework and tmp_status != homework['status']:
-                message = parse_status(homework)
-                send_message(bot, message)
-                tmp_status = homework['status']
-            logging.Logger.info(
-                f'Изменений нет, {RETRY_TIME} секунд и проверяем API')
-            current_timestamp = response.get('current_date', current_timestamp)
-
+            get_api_answer_result = get_api_answer(url, current_timestamp)
+            check_response_result = check_response(get_api_answer_result)
+            if check_response_result:
+                for homework in check_response_result:
+                    parse_status_result = parse_status(homework)
+                    send_message(bot, parse_status_result)
+            time.sleep(RETRY_TIME)
         except Exception as error:
-            message = f'Сбой в работе программы: {error}'
-            logging.Logger.error(message)
-            if error_message != message:
-                error_message = message
-                send_message(bot, error_message)
-        time.sleep(RETRY_TIME)
-
+            logging.error('Bot down')
+            bot.send_message(
+                text=f'Сбой в работе программы: {error}'
+            )
+            time.sleep(RETRY_TIME)
+            continue
 
 if __name__ == '__main__':
     main()
